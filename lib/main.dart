@@ -21,13 +21,40 @@ import 'package:url_strategy/url_strategy.dart';
 import 'helper/get_di.dart' as di;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+Future<void> initNotifications() async {
+  // Define the notification channel
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'test_channel', // Unique channel ID
+    'Test Notifications', // Channel Name
+    description: 'This channel is used for test notifications.',
+    importance: Importance.high,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('notification'), // Ensure 'notification.mp3' is in `res/raw/`
+  );
 
+  // Initialize notifications
+  const AndroidInitializationSettings initializationSettingsAndroid =
+  AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings =
+  InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // Register the notification channel
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+}
 Future<void> main() async {
   if(!GetPlatform.isWeb) {
     HttpOverrides.global = MyHttpOverrides();
   }
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+
+  initNotifications();
 
   if(GetPlatform.isAndroid) {
     await Firebase.initializeApp(
